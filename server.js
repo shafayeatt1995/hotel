@@ -4,20 +4,25 @@ const backendApp = require("./backend/index.js");
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
-require("module-alias/register");
+const port = process.env.PORT || 3000;
+const cors = require("cors");
+const { socketServer } = require("./socketServer.js");
 
 app.prepare().then(() => {
-  const server = express();
+  const app = express();
+  app.use(cors());
 
-  server.use("/api", backendApp);
+  app.use("/api", backendApp);
 
   // Default handler for Next.js
-  server.all("*", (req, res) => {
+  app.all("*", (req, res) => {
     return handle(req, res);
   });
 
-  server.listen(8080, (err) => {
+  const server = socketServer(app);
+
+  server.listen(port, (err) => {
     if (err) throw err;
-    console.log("> Ready on http://localhost:8080");
+    console.log(`> Ready on http://localhost:${port}`);
   });
 });
